@@ -1,0 +1,241 @@
+openapi: 3.0.3
+info:
+  title: ChoreBoard API
+  version: 1.0.0
+  description: >
+    REST API for the household chore coordination board. Documents the API
+    as it currently exists (household scope) — written as-is, ahead of the
+    team-kanban rebuild which will revise this contract.
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development
+
+paths:
+  /board:
+    get:
+      summary: Get the full board
+      description: >
+        Returns all chores grouped into buckets by status/claim state,
+        plus the household member list and any active nudges.
+      operationId: getBoard
+      responses:
+        '200':
+          description: The board, fully populated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoardResponse'
+
+  /chores/{choreId}/claim:
+    post:
+      summary: Claim an unclaimed chore
+      description: >
+        Assigns a chore to a household member and moves its status to
+        in_progress. Fails if the chore doesn't exist or is already claimed.
+      operationId: claimChore
+      parameters:
+        - name: choreId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimRequest'
+      responses:
+        '200':
+          description: Chore successfully claimed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chore'
+        '400':
+          description: Invalid chore ID, or memberId missing/invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Chore not found or already claimed, or member not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /chores/{choreId}/complete:
+    post:
+      summary: Mark a chore done
+      description: >
+        One-off chores become done permanently. Recurring chores reset to
+        todo, clear their claimant, and advance their due date by
+        recurrenceInterval days.
+      operationId: completeChore
+      parameters:
+        - name: choreId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chore successfully completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chore'
+        '400':
+          description: Invalid chore ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Chore not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /members:
+    get:
+      summary: List household members
+      operationId: getMembers
+      responses:
+        '200':
+          description: All household members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HouseholdMember'
+
+components:
+  schemas:
+    HouseholdMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required: [id, name]
+
+    Chore:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        recurrenceType:
+          type: string
+          enum: [one_off, recurring]
+        recurrenceInterval:
+          type: integer
+          nullable: true
+          description: Days between recurrences. Null for one-off chores.
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        timeEstimate:
+          type: string
+          enum: [quick, medium, big]
+        claimedById:
+          type: integer
+          nullable: true
+        lastCompletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastUpdatedAt:
+          type: string
+          format: date-time
+        claimedBy:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/HouseholdMember'
+        isStale:
+          type: boolean
+          description: True if not done and untouched for 3+ days.
+        daysStale:
+          type: integer
+          description: Days since lastUpdatedAt. Always 0 for done chores.
+      required:
+        - id
+        - title
+        - status
+        - recurrenceType
+        - timeEstimate
+        - lastUpdatedAt
+        - isStale
+        - daysStale
+
+    Nudge:
+      type: object
+      properties:
+        memberId:
+          type: integer
+        name:
+          type: string
+        daysSinceLastActivity:
+          type: integer
+          nullable: true
+          description: Null means this member has never claimed or completed anything.
+      required: [memberId, name, daysSinceLastActivity]
+
+    BoardResponse:
+      type: object
+      properties:
+        unclaimed:
+          type: array
+          items:
+            $ref: '#/components/schemas/Chore'
+        claimedTodo:
+          type: array
+          items:
+            $ref: '#/components/schemas/Chore'
+          description: >
+            Chores with a claimant but status still todo. Not reachable
+            through the normal claim flow (which moves straight to
+            in_progress) — kept in the API for data-model completeness.
+        inProgress:
+          type: array
+          items:
+            $ref: '#/components/schemas/Chore'
+        done:
+          type: array
+          items:
+            $ref: '#/components/schemas/Chore'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/HouseholdMember'
+        nudges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Nudge'
+      required: [unclaimed, claimedTodo, inProgress, done, members, nudges]
+
+    ClaimRequest:
+      type: object
+      properties:
+        memberId:
+          type: integer
+          minimum: 1
+      required: [memberId]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]

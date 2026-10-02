@@ -1,0 +1,30 @@
+{
+    "name": "backend",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "nodemon src/server.js",
+        "test": "NODE_ENV=test vitest",
+        "db:migrate": "sequelize-cli db:migrate",
+        "db:seed": "sequelize-cli db:seed",
+        "seed:demo" : "node seeders/seed.js"
+    },
+    "dependencies": {
+        "cors": "^2.8.6",
+        "dotenv": "^17.4.2",
+        "express": "^5.2.1",
+        "pg": "^8.23.0",
+        "pg-hstore": "^2.3.4",
+        "sequelize": "^6.37.8",
+        "zod": "^4.6.5"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.14",
+        "sequelize-cli": "^6.6.5",
+        "supertest": "^7.2.2",
+        "vitest": "^5.0.0"
+    }
+}

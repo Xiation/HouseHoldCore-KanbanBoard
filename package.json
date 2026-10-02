@@ -1,0 +1,7 @@
+{
+    "private": true,
+    "scripts":{
+        "dev": "pnpm --parallel --filter ./backend --filter ./frontend dev",
+        "test": "pnpm --filter ./backend test"
+    }
+}

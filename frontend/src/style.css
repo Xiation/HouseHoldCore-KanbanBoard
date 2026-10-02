@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #F0FDFA;
+  color: #134E4A;
+  margin: 0;
+}
+
+.card {
+  background: #FFFFFF;
+  border: 1px solid #99F6E4;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: box-shadow 200ms ease;
+  margin-bottom: 12px;
+}
+.card:hover {
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.card--stale {
+  border-left: 3px solid #EA580C;
+}
+
+.nudge-banner {
+  background: #E8F1F4;
+  border: 1px solid #99F6E4;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #134E4A;
+  margin-bottom: 16px;
+}
+
+.status-message {
+  padding: 32px;
+  text-align: center;
+  font-size: 16px;
+  color: #134E4A;
+}
+.status-message--error {
+  color: #DC2626;
+}
+
+.board {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  flex-wrap: wrap;
+}
+.board section {
+  flex: 1;
+  min-width: 260px;
+}
+
+@media (max-width: 768px) {
+  .board section {
+    min-width: 100%;
+  }
+}
